@@ -72,6 +72,9 @@ type Client struct {
 
 	// Disputes accesses the /v1/disputes endpoints.
 	Disputes *DisputeService
+
+	// Organizations accesses the /v1/organizations endpoints.
+	Organizations *OrganizationService
 }
 
 // NewClient creates a Client authenticated with the given secret key. The key
@@ -108,6 +111,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Conversions = &ConversionService{core: core}
 	c.Checkout = &CheckoutService{core: core}
 	c.Disputes = &DisputeService{core: core}
+	c.Organizations = &OrganizationService{core: core}
 	return c, nil
 }
 
