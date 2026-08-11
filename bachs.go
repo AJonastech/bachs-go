@@ -60,6 +60,9 @@ type Client struct {
 
 	// Transfers accesses the /v1/transfers endpoints.
 	Transfers *TransferService
+
+	// Conversions accesses the /v1/conversions endpoints.
+	Conversions *ConversionService
 }
 
 // NewClient creates a Client authenticated with the given secret key. The key
@@ -92,6 +95,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Refunds = &RefundService{core: core}
 	c.Subscriptions = &SubscriptionService{core: core}
 	c.Transfers = &TransferService{core: core}
+	c.Conversions = &ConversionService{core: core}
 	return c, nil
 }
 
