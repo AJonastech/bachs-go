@@ -2,6 +2,7 @@ package bachs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -24,6 +25,46 @@ func newTestClient(t *testing.T, handler http.HandlerFunc) (*Client, *httptest.S
 	}
 	c.core.baseBackoff = time.Millisecond
 	return c, srv
+}
+
+// decodeJSON reads r as a JSON object into a map, failing the test on error.
+func decodeJSON(t *testing.T, r io.Reader) map[string]any {
+	t.Helper()
+	body, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatalf("decode body: %v (body: %s)", err, body)
+	}
+	return m
+}
+
+// TestIsNilBody covers the typed-nil detection used to decide whether a request
+// carries a body. A (*T)(nil) passed through an any parameter is not == nil, so
+// without this it would marshal to the literal "null".
+func TestIsNilBody(t *testing.T) {
+	type params struct{ A int }
+	var nilPtr *params
+	var nilMap map[string]any
+	cases := []struct {
+		name string
+		body any
+		want bool
+	}{
+		{"untyped nil", nil, true},
+		{"typed nil pointer", nilPtr, true},
+		{"nil map", nilMap, true},
+		{"non-nil pointer", &params{A: 1}, false},
+		{"struct value", params{A: 1}, false},
+		{"map value", map[string]any{"a": 1}, false},
+	}
+	for _, tc := range cases {
+		if got := isNilBody(tc.body); got != tc.want {
+			t.Errorf("isNilBody(%s) = %v, want %v", tc.name, got, tc.want)
+		}
+	}
 }
 
 func TestNewClient_RequiresKey(t *testing.T) {

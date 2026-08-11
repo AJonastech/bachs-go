@@ -9,6 +9,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -60,7 +61,7 @@ func (c *client) do(
 	ro := resolveRequestOptions(opts)
 
 	var bodyBytes []byte
-	if body != nil {
+	if !isNilBody(body) {
 		b, err := json.Marshal(body)
 		if err != nil {
 			return fmt.Errorf("bachs: encoding request body: %w", err)
@@ -170,6 +171,22 @@ func (c *client) newRequest(
 
 // decodeSuccess decodes a 2xx body into out. A 204 or empty body with a non-nil
 // out is a no-op; out stays at its zero value.
+// isNilBody reports whether body should be treated as "no request body". It
+// catches both an untyped nil and a typed nil pointer (e.g. a (*XParams)(nil)
+// passed through the any parameter), which a plain body == nil check misses and
+// which would otherwise marshal to the literal "null".
+func isNilBody(body any) bool {
+	if body == nil {
+		return true
+	}
+	switch v := reflect.ValueOf(body); v.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Slice, reflect.Interface:
+		return v.IsNil()
+	default:
+		return false
+	}
+}
+
 func decodeSuccess(status int, respBody []byte, out any) error {
 	if out == nil || status == http.StatusNoContent || len(bytes.TrimSpace(respBody)) == 0 {
 		return nil
