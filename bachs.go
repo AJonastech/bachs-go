@@ -81,6 +81,9 @@ type Client struct {
 
 	// Uploads accesses the /v1/utilities/uploads endpoints.
 	Uploads *UploadService
+
+	// Webhooks accesses the /v1/webhooks endpoints.
+	Webhooks *WebhookService
 }
 
 // NewClient creates a Client authenticated with the given secret key. The key
@@ -120,6 +123,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Organizations = &OrganizationService{core: core}
 	c.Payouts = &PayoutService{core: core}
 	c.Uploads = &UploadService{core: core}
+	c.Webhooks = &WebhookService{core: core}
 	return c, nil
 }
 
