@@ -57,6 +57,9 @@ type Client struct {
 
 	// Subscriptions accesses the /v1/subscriptions endpoints.
 	Subscriptions *SubscriptionService
+
+	// Transfers accesses the /v1/transfers endpoints.
+	Transfers *TransferService
 }
 
 // NewClient creates a Client authenticated with the given secret key. The key
@@ -88,6 +91,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Payments = &PaymentService{core: core}
 	c.Refunds = &RefundService{core: core}
 	c.Subscriptions = &SubscriptionService{core: core}
+	c.Transfers = &TransferService{core: core}
 	return c, nil
 }
 
