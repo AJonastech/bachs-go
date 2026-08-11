@@ -7,7 +7,7 @@ A hand-written, idiomatic Go client for the [Bachs API](https://docs.bachs.io) �
 - **Auto-pagination** — range over every page with Go 1.23+ iterators; no manual cursor/offset bookkeeping.
 - **No runtime dependencies** — standard library only (`net/http`, `encoding/json`).
 
-> **Status:** early. The core client and the **Customers** and **Products** resources are complete and tested. The remaining resources follow the same pattern — see [Adding a resource](#adding-a-resource).
+> **Status:** all 18 resource groups covering the full Bachs API (96 endpoints) are implemented on a shared, tested core. The core client, Customers, Products, Refunds, Subscriptions, and Disputes have dedicated round-trip tests; every resource follows the same pattern — see [Adding a resource](#adding-a-resource).
 
 ## Requirements
 
@@ -180,10 +180,32 @@ A `Client` is safe for concurrent use by multiple goroutines.
 
 ## Resources
 
-| Resource  | Methods                                                        |
-| --------- | ------------------------------------------------------------- |
-| Customers | `Create`, `Get`, `Update`, `List`, `All`                      |
-| Products  | `Create`, `Get`, `Update`, `List`, `All`, `Archive`, `Unarchive` |
+Reach each resource through its field on the `Client` (e.g. `client.Customers`). Every `List` has a matching `All` that auto-paginates.
+
+| Field               | Service methods                                                                 |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `Customers`         | `Create`, `Get`, `Update`, `List`, `All`, `CreatePortalSession`                 |
+| `Products`          | `Create`, `Get`, `Update`, `List`, `All`, `Archive`, `Unarchive`                |
+| `ProductGroups`     | `Create`, `Get`, `Update`, `Delete`, `List`, `All`                              |
+| `Accounts`          | `Balances`                                                                      |
+| `Currencies`        | `Supported`, `PayoutSupported`                                                  |
+| `PaymentMethods`    | `List`, `Rails`                                                                 |
+| `Payments`          | `List`, `All`, `Get`, `Charge`                                                  |
+| `Refunds`           | `Create`, `Get`, `GetByCharge`, `List`, `All`                                   |
+| `Subscriptions`     | `Get`, `Update`, `Cancel`, `List`, `All`                                        |
+| `Transfers`         | `Create`, `Get`, `List`, `All`                                                  |
+| `Conversions`       | `Quote`, `Create`, `Get`, `List`, `All`                                         |
+| `Checkout`          | `CreateSession`, `GetSession`, `Get`                                            |
+| `Disputes`          | `List`, `All`, `Get`, `UpdateEvidence`, `Submit`, `UploadDocument`              |
+| `Organizations`     | `Me`, `Get`, `CheckoutSettings`, `UpdateCheckoutSettings`, `CreateConnectedAccount`, `ListConnectedAccounts`, `AllConnectedAccounts` |
+| `ConnectedAccounts` | `Get`, `Update`, `CreateAccountLink`, `Capabilities`, `Checklist`, `Tasks`, `AllTasks`, `TaskValues`, `SubmitTasks`, `ListBanks`, `ListMobileMoneyProviders`, `ResolveBankAccount`, `ReusableIdentity`, `ApplyReusableIdentity`, `UploadDocument`, `GetUpload` |
+| `Payouts`           | `SupportedCurrencies`, `ListBanks`, `ResolveAccount`, `Quote`, `ListDestinations`, `CreateDestination`, `UpdateDestination`, `DeleteDestination`, `CreateWithdrawal`, `Get`, `List`, `All` |
+| `Uploads`           | `Create`, `Get`, `Delete`                                                       |
+| `Webhooks`          | `CreateEndpoint`, `ListEndpoints`, `GetEndpoint`, `UpdateEndpoint`, `DeleteEndpoint`, `Secret`, `RotateSecret`, `EndpointMetrics`, `ListEvents`, `AllEvents`, `GetEvent`, `ListEndpointEvents`, `AllEndpointEvents`, `GetEndpointEvent`, `ResendEvent`, `Replay` |
+
+Webhook signature verification is not yet included — the signing scheme is not confirmed in the public docs. `Webhooks.Secret` and `CreateEndpoint` return the signing secret so you can verify deliveries yourself in the meantime.
+
+File uploads (`Disputes.UploadDocument`, `ConnectedAccounts.UploadDocument`, `Uploads.Create`) take a `FileUpload{FileName, Reader, ContentType}` and are sent as `multipart/form-data`.
 
 ## Adding a resource
 
