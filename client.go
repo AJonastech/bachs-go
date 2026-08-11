@@ -58,16 +58,47 @@ func (c *client) do(
 	body, out any,
 	opts []RequestOption,
 ) error {
-	ro := resolveRequestOptions(opts)
-
 	var bodyBytes []byte
+	contentType := ""
 	if !isNilBody(body) {
 		b, err := json.Marshal(body)
 		if err != nil {
 			return fmt.Errorf("bachs: encoding request body: %w", err)
 		}
 		bodyBytes = b
+		contentType = "application/json"
 	}
+	return c.doBytes(ctx, method, path, query, bodyBytes, contentType, out, opts)
+}
+
+// doMultipart executes a multipart/form-data upload. The body and its content
+// type (including the generated boundary) are built by buildMultipart. Like a
+// plain POST, an upload is only retried when the caller supplies an idempotency
+// key, since re-sending it would create a duplicate document.
+func (c *client) doMultipart(
+	ctx context.Context,
+	method, path string,
+	bodyBytes []byte,
+	contentType string,
+	out any,
+	opts []RequestOption,
+) error {
+	return c.doBytes(ctx, method, path, nil, bodyBytes, contentType, out, opts)
+}
+
+// doBytes is the shared request/retry engine used by both do (JSON) and
+// doMultipart. bodyBytes is the already-encoded request body (nil for none) and
+// contentType is its media type (empty for none).
+func (c *client) doBytes(
+	ctx context.Context,
+	method, path string,
+	query url.Values,
+	bodyBytes []byte,
+	contentType string,
+	out any,
+	opts []RequestOption,
+) error {
+	ro := resolveRequestOptions(opts)
 
 	endpoint := c.baseURL + path
 	if len(query) > 0 {
@@ -78,7 +109,7 @@ func (c *client) do(
 
 	var lastErr error
 	for attempt := 0; ; attempt++ {
-		req, err := c.newRequest(ctx, method, endpoint, bodyBytes, ro)
+		req, err := c.newRequest(ctx, method, endpoint, bodyBytes, contentType, ro)
 		if err != nil {
 			return err
 		}
@@ -127,11 +158,13 @@ func (c *client) do(
 }
 
 // newRequest builds a single *http.Request, applying default and per-request
-// headers, authentication, and the idempotency key.
+// headers, authentication, and the idempotency key. contentType, when non-empty,
+// sets the Content-Type header for the supplied body.
 func (c *client) newRequest(
 	ctx context.Context,
 	method, endpoint string,
 	bodyBytes []byte,
+	contentType string,
 	ro requestOptions,
 ) (*http.Request, error) {
 	var reader io.Reader
@@ -154,8 +187,8 @@ func (c *client) newRequest(
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
-	if bodyBytes != nil {
-		req.Header.Set("Content-Type", "application/json")
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
 	}
 	if ro.idempotencyKey != "" {
 		req.Header.Set("Idempotency-Key", ro.idempotencyKey)
