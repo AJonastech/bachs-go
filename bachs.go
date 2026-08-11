@@ -48,6 +48,9 @@ type Client struct {
 
 	// PaymentMethods accesses the /v1/payment-methods endpoints.
 	PaymentMethods *PaymentMethodService
+
+	// Payments accesses the /v1/payments endpoints.
+	Payments *PaymentService
 }
 
 // NewClient creates a Client authenticated with the given secret key. The key
@@ -76,6 +79,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Accounts = &AccountService{core: core}
 	c.Currencies = &CurrencyService{core: core}
 	c.PaymentMethods = &PaymentMethodService{core: core}
+	c.Payments = &PaymentService{core: core}
 	return c, nil
 }
 
