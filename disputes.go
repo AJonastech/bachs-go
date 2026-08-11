@@ -260,7 +260,7 @@ func (s *DisputeService) Submit(ctx context.Context, id string, opts ...RequestO
 // 10 MB) and returns its details. Use the returned DocumentID as an attachment
 // ID in DisputeEvidenceUpdateParams.
 func (s *DisputeService) UploadDocument(ctx context.Context, file FileUpload, opts ...RequestOption) (*DisputeDocument, error) {
-	body, contentType, err := buildMultipart("file", file)
+	body, contentType, err := buildMultipart("file", file, nil)
 	if err != nil {
 		return nil, err
 	}

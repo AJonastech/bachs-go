@@ -20,12 +20,22 @@ type FileUpload struct {
 	ContentType string
 }
 
-// buildMultipart encodes a single-file multipart/form-data body with the file
-// under the given form field name. It returns the encoded bytes and the
-// Content-Type header value (which includes the generated boundary).
-func buildMultipart(field string, file FileUpload) ([]byte, string, error) {
+// buildMultipart encodes a multipart/form-data body with the file under the
+// given form field name, preceded by any extra text fields. It returns the
+// encoded bytes and the Content-Type header value (which includes the generated
+// boundary). Text fields with an empty value are skipped.
+func buildMultipart(field string, file FileUpload, fields map[string]string) ([]byte, string, error) {
 	var buf bytes.Buffer
 	w := multipart.NewWriter(&buf)
+
+	for name, value := range fields {
+		if value == "" {
+			continue
+		}
+		if err := w.WriteField(name, value); err != nil {
+			return nil, "", fmt.Errorf("bachs: building upload: %w", err)
+		}
+	}
 
 	var (
 		part io.Writer

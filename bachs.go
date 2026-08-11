@@ -78,6 +78,9 @@ type Client struct {
 
 	// Payouts accesses the /v1/payouts endpoints.
 	Payouts *PayoutService
+
+	// Uploads accesses the /v1/utilities/uploads endpoints.
+	Uploads *UploadService
 }
 
 // NewClient creates a Client authenticated with the given secret key. The key
@@ -116,6 +119,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Disputes = &DisputeService{core: core}
 	c.Organizations = &OrganizationService{core: core}
 	c.Payouts = &PayoutService{core: core}
+	c.Uploads = &UploadService{core: core}
 	return c, nil
 }
 
