@@ -76,6 +76,9 @@ type Client struct {
 	// Organizations accesses the /v1/organizations endpoints.
 	Organizations *OrganizationService
 
+	// ConnectedAccounts accesses the per-account /v1/connected-accounts endpoints.
+	ConnectedAccounts *ConnectedAccountService
+
 	// Payouts accesses the /v1/payouts endpoints.
 	Payouts *PayoutService
 
@@ -121,6 +124,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c.Checkout = &CheckoutService{core: core}
 	c.Disputes = &DisputeService{core: core}
 	c.Organizations = &OrganizationService{core: core}
+	c.ConnectedAccounts = &ConnectedAccountService{core: core}
 	c.Payouts = &PayoutService{core: core}
 	c.Uploads = &UploadService{core: core}
 	c.Webhooks = &WebhookService{core: core}
