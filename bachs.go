@@ -40,6 +40,9 @@ type Client struct {
 	// Products accesses the /v1/products endpoints.
 	Products *ProductService
 
+	// ProductGroups accesses the /v1/product-groups endpoints.
+	ProductGroups *ProductGroupService
+
 	// Accounts accesses the /v1/accounts endpoints.
 	Accounts *AccountService
 
@@ -88,6 +91,7 @@ func NewClient(apiKey string, opts ...Option) (*Client, error) {
 	c := &Client{core: core}
 	c.Customers = &CustomerService{core: core}
 	c.Products = &ProductService{core: core}
+	c.ProductGroups = &ProductGroupService{core: core}
 	c.Accounts = &AccountService{core: core}
 	c.Currencies = &CurrencyService{core: core}
 	c.PaymentMethods = &PaymentMethodService{core: core}
